@@ -13,6 +13,7 @@ docker-compose up
 #### 运行示例
 运行服务
 ```
+pip3 install flask
 flask run
 ```
 触发事务
