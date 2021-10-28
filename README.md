@@ -2,7 +2,7 @@
 
 #### 启动dtm
 
-首先安装docker版本18以上
+首先安装docker版本20.04以上
 
 ```
 git clone https://github.com/yedf/dtm
