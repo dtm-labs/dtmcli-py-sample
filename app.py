@@ -50,17 +50,20 @@ out_uid = 1
 in_uid = 2
 
 def tcc_adjust_trading(cursor, uid, amount):
-  affected = utils.sqlexec(cursor, "update dtm_busi.user_account_trading set trading_balance=trading_balance + %d where user_id=%d and trading_balance + %d + (select balance from dtm_busi.user_account where id=%d) >= 0" % (amount, uid, amount, uid))
+  affected = utils.sqlexec(
+    cursor, "update dtm_busi.user_account set trading_balance=trading_balance+%d	where user_id=%d and trading_balance + %d + balance >= 0" % (amount, uid, amount))
   if affected == 0:
     raise Exception("update error, maybe balance not enough")
 
+
 def tcc_adjust_balance(cursor, uid, amount):
-  utils.sqlexec(cursor, "update dtm_busi.user_account_trading set trading_balance = trading_balance+ %d where user_id=%d" %( -amount, uid))
-  utils.sqlexec(cursor, "update dtm_busi.user_account set balance=balance+%d where user_id=%d" %(amount, uid))
+  utils.sqlexec(
+    cursor, "update dtm_busi.user_account set trading_balance=trading_balance-%d, balance=balance+%d where user_id=%d" % (-amount, amount, uid))
 
 
 def saga_adjust_balance(cursor, uid, amount):
-  affected = utils.sqlexec(cursor, "update dtm_busi.user_account set balance=balance+%d where user_id=%d and balance >= -%d" %(amount, uid, amount))
+  affected = utils.sqlexec(
+    cursor, "update dtm_busi.user_account set balance=balance+%d where user_id=%d and balance >= -%d" % (amount, uid, amount))
   if affected == 0:
     raise Exception("update error, balance not enough")
 
