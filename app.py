@@ -19,7 +19,7 @@ def barrier_from_req(request):
 
 
 # 这是dtm服务地址
-dtm = "http://localhost:8080/api/dtmsvr"
+dtm = "http://localhost:36789/api/dtmsvr"
 # 这是业务微服务地址
 svc = "http://localhost:5000/api"
 
