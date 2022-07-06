@@ -15,7 +15,7 @@ def conn_new():
   return pymysql.connect(host=dbconf["host"], user=dbconf["user"], password=dbconf["password"], database="").cursor()
 
 def barrier_from_req(request):
-  return barrier.BranchBarrier(request.args.get("trans_type"), request.args.get("gid"), request.args.get("branch_id"), request.args.get("branch_type"))
+  return barrier.BranchBarrier(request.args.get("trans_type"), request.args.get("gid"), request.args.get("branch_id"), request.args.get("op"))
 
 
 # 这是dtm服务地址
@@ -44,7 +44,7 @@ def fire_saga():
     s.add(req, svc + "/TransOutSaga", svc + "/TransOutCompensate")
     s.add(req, svc + "/TransInSaga", svc + "/TransInCompensate")
     s.submit()
-    return {"gid": s.gid}
+    return {"gid": s.trans_base.gid}
 
 out_uid = 1
 in_uid = 2
@@ -58,7 +58,7 @@ def tcc_adjust_trading(cursor, uid, amount):
 
 def tcc_adjust_balance(cursor, uid, amount):
   utils.sqlexec(
-    cursor, "update dtm_busi.user_account set trading_balance=trading_balance-%d, balance=balance+%d where user_id=%d" % (-amount, amount, uid))
+    cursor, "update dtm_busi.user_account set trading_balance=trading_balance-%d, balance=balance+%d where user_id=%d" % (amount, amount, uid))
 
 
 def saga_adjust_balance(cursor, uid, amount):
