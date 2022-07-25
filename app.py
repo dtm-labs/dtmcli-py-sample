@@ -4,6 +4,7 @@ from dtmcli import tcc
 from dtmcli import barrier
 from dtmcli import utils
 from dtmcli import saga
+from dtmcli import msg
 import pymysql
 
 app = Flask(__name__)
@@ -23,6 +24,8 @@ dtm = "http://localhost:36789/api/dtmsvr"
 # 这是业务微服务地址
 svc = "http://localhost:5000/api"
 
+out_uid = 1
+in_uid = 2
 @app.get("/api/fireTcc")
 def fire_tcc():
     # 发起tcc事务
@@ -46,8 +49,38 @@ def fire_saga():
     s.submit()
     return {"gid": s.trans_base.gid}
 
-out_uid = 1
-in_uid = 2
+@app.get("/api/fireMsg")
+def fire_msg():
+    req = {"amount": 30}
+    m = msg.Msg(dtm, utils.gen_gid(dtm))
+    m.add(req, svc + "/TransOutSaga")
+    m.add(req, svc + "/TransInSaga")
+    m.submit()
+    return {"gid": m.trans_base.gid}
+
+@app.get("/api/fireMsgdb")
+def fire_msgdb():
+    req = {"amount": 30}
+    m = msg.Msg(dtm, utils.gen_gid(dtm))
+    m.add(req, svc + "/TransInSaga")
+    def busi_callback(c):
+      saga_adjust_balance(c, out_uid, -30)
+    with barrier.AutoCursor(conn_new()) as cursor:
+        m.do_and_submit_db(svc+"/queryprepared",cursor,busi_callback)
+    return {"gid": m.trans_base.gid}
+
+@app.get("/api/queryprepared")
+def query_prepared():
+  with barrier.AutoCursor(conn_new()) as cursor:
+    try:
+        barrier_from_req(request).query_prepared(cursor)
+    except utils.DTMFailureError as e:
+        return {"dtm_result": "DTMFAILUREERROR"},409
+    except Exception as e:
+        return {"dtm_result": "FAILURE"}
+  return {"dtm_result": "SUCCESS"}
+
+
 
 def tcc_adjust_trading(cursor, uid, amount):
   affected = utils.sqlexec(
