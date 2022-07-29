@@ -75,9 +75,9 @@ def query_prepared():
     try:
         barrier_from_req(request).query_prepared(cursor)
     except utils.DTMFailureError as e:
-        return {"dtm_result": "DTMFAILUREERROR"},409
+        return {"dtm_result": "DTMFAILUREERROR"}, 409
     except Exception as e:
-        return {"dtm_result": "FAILURE"}
+        return {"dtm_result": "UNKNOWN"}, 500
   return {"dtm_result": "SUCCESS"}
 
 
